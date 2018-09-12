@@ -7,61 +7,75 @@ import tweepy  # https://github.com/tweepy/tweepy
 import json
 
 # Twitter API credentials
-consumer_key = "CakI0Yo4A57sRoHqTR4C6af9T"
-consumer_secret = "ZgewS0TpOkg2j3F4n9SBXX5xIdFcqMxApAhMu2BZ5AoA8uWG9v"
-access_key = "1038971587133882368-hzUhfVrAQKi2NTAB2M6sXi0B1r6tsG"
-access_secret = "d4n9DmIUSnGWYKg7HpBZoZzM9DCgp1VUNu40FCcHFocMj"
+
+def twitter_OAuth_login():
+    # need consumer_key, consumer_secret, access_key, access_secret from files
+    secret_dict = {'consumer_key': '',
+                   'consumer_secret': '',
+                   'access_key': '',
+                   'access_secret': ''}
+    # try open config file
+    try:
+        file = open('twitter_dev.ini', 'r')
+    except:
+        print("open config file fail!")
+        return None
+    # record key & secret mentioned above
+    for line in file:
+        if line[-1] == '\n':
+            line = line[:-1]
+        elements = line.split('=')
+        if elements[0] in secret_dict.keys():
+            secret_dict[elements[0]] = elements[1]
+    file.close()
+    # try access to twitter by OAuth
+    try:
+        auth = tweepy.OAuthHandler(secret_dict['consumer_key'], secret_dict['consumer_secret'])
+        auth.set_access_token(secret_dict['access_key'], secret_dict['access_secret'])
+        api = tweepy.API(auth)
+    except tweepy.TweepError:
+        print("fail to access to twitter by OAuth")
+        print(secret_dict)
+        return None
+
+    return api
+
 
 
 def get_all_tweets(screen_name):
     # Twitter only allows access to a users most recent 3240 tweets with this method
+    api = twitter_OAuth_login()
+    if api is None:
+        print("fail to authorize twitter. please check twitter_dev.ini and network condition")
+        return
 
-    # authorize twitter, initialize tweepy
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_key, access_secret)
-    api = tweepy.API(auth)
-
-    # initialize a list to hold all the tweepy Tweets
     alltweets = []
+    curr_page = 1
 
-    # make initial request for most recent tweets (200 is the maximum allowed count)
-    new_tweets = api.user_timeline(screen_name=screen_name, count=10)
-
-    # save most recent tweets
+    new_tweets = api.user_timeline(screen_name=screen_name,count=200,tweet_mode='extended')
     alltweets.extend(new_tweets)
 
-    # save the id of the oldest tweet less one
     oldest = alltweets[-1].id - 1
 
-    # keep grabbing tweets until there are no tweets left to grab
     while len(new_tweets) > 0:
 
-        # all subsiquent requests use the max_id param to prevent duplicates
-        new_tweets = api.user_timeline(screen_name=screen_name, count=10, max_id=oldest)
+        new_tweets = api.user_timeline(screen_name=screen_name, count=200, max_id=oldest, tweet_mode='extended')
 
-        # save most recent tweets
         alltweets.extend(new_tweets)
 
-        # update the id of the oldest tweet less one
         oldest = alltweets[-1].id - 1
-        if (len(alltweets) > 15):
+        if (len(alltweets) > 3000):
             break
-        print
-        "...%s tweets downloaded so far" % (len(alltweets))
+        print("...%s tweets downloaded so far" % (len(alltweets)))
 
-    # write tweet objects to JSON
     file = open('tweet.json', 'w')
-    print
-    "Writing tweet objects to JSON please wait..."
+    print("Writing tweet objects to JSON please wait...")
     for status in alltweets:
         json.dump(status._json, file, sort_keys=True, indent=4)
 
-    # close the file
-    print
-    "Done"
     file.close()
 
 
 if __name__ == '__main__':
     # pass in the username of the account you want to download
-    get_all_tweets("@Ibra_official")
+    get_all_tweets("@foofighters")
