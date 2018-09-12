@@ -5,6 +5,8 @@
 
 import tweepy  # https://github.com/tweepy/tweepy
 import json
+import urllib
+import os
 
 # Twitter API credentials
 
@@ -40,7 +42,27 @@ def twitter_OAuth_login():
 
     return api
 
+def extract_images_url(file_name='tweet.json'):
+    image_urls = []
+    with open(file_name) as file:
+        data = json.loads(file.read())
 
+    for tweet in data:
+        if 'extended_entities' in tweet.keys():
+            extended_entities = tweet['extended_entities']['media']
+            for extended_entity in extended_entities:
+                if 'photo' == extended_entity['type']:
+                    image_urls.append(extended_entity['media_url'])
+
+    return image_urls
+
+def download_images(urls=[])
+    if not os.path.exists('./download_images'):
+        os.mkdir('./download_images')
+    for url in urls:
+        save_name = url.split('/')[-1]
+        with open('./download_images/'+save_name, 'wb') as file:
+            file.write(urllib.request.urlopen(url).read())
 
 def get_all_tweets(screen_name):
     # Twitter only allows access to a users most recent 3240 tweets with this method
@@ -50,7 +72,7 @@ def get_all_tweets(screen_name):
         return
 
     alltweets = []
-    curr_page = 1
+    alltweets_json = []
 
     new_tweets = api.user_timeline(screen_name=screen_name,count=200,tweet_mode='extended')
     alltweets.extend(new_tweets)
@@ -64,16 +86,20 @@ def get_all_tweets(screen_name):
         alltweets.extend(new_tweets)
 
         oldest = alltweets[-1].id - 1
-        if (len(alltweets) > 3000):
+        if (len(alltweets) > 500):
             break
         print("...%s tweets downloaded so far" % (len(alltweets)))
 
     file = open('tweet.json', 'w')
     print("Writing tweet objects to JSON please wait...")
     for status in alltweets:
-        json.dump(status._json, file, sort_keys=True, indent=4)
+        alltweets_json.append(status._json)
+
+    json.dump(alltweets_json, file, sort_keys=True, indent=4)
 
     file.close()
+
+
 
 
 if __name__ == '__main__':
