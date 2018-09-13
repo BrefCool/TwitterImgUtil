@@ -56,13 +56,19 @@ def extract_images_url(file_name='tweet.json'):
 
     return image_urls
 
-def download_images(urls=[])
-    if not os.path.exists('./download_images'):
-        os.mkdir('./download_images')
+def download_images(user, urls=[]):
+    save_path = './download_images/'
+    count = 0
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    save_path += user
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
     for url in urls:
-        save_name = url.split('/')[-1]
-        with open('./download_images/'+save_name, 'wb') as file:
+        save_name = 'image-%05d.jpg' % count
+        with open(save_path+'/'+save_name, 'wb') as file:
             file.write(urllib.request.urlopen(url).read())
+        count += 1
 
 def get_all_tweets(screen_name):
     # Twitter only allows access to a users most recent 3240 tweets with this method
@@ -74,14 +80,14 @@ def get_all_tweets(screen_name):
     alltweets = []
     alltweets_json = []
 
-    new_tweets = api.user_timeline(screen_name=screen_name,count=200,tweet_mode='extended')
+    new_tweets = api.user_timeline(screen_name=screen_name,count=10,tweet_mode='extended')
     alltweets.extend(new_tweets)
 
     oldest = alltweets[-1].id - 1
 
     while len(new_tweets) > 0:
 
-        new_tweets = api.user_timeline(screen_name=screen_name, count=200, max_id=oldest, tweet_mode='extended')
+        new_tweets = api.user_timeline(screen_name=screen_name, count=50, max_id=oldest, tweet_mode='extended')
 
         alltweets.extend(new_tweets)
 
@@ -99,9 +105,11 @@ def get_all_tweets(screen_name):
 
     file.close()
 
-
-
-
-if __name__ == '__main__':
-    # pass in the username of the account you want to download
-    get_all_tweets("@foofighters")
+def get_all_images(screen_name):
+    print("start grabbing tweets...")
+    get_all_tweets(screen_name)
+    print("..................finish")
+    print("start downloading images...")
+    urls = extract_images_url()
+    download_images(screen_name, urls)
+    print("..................finish")
