@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Author - Prateek Mehta
-
 
 import tweepy  # https://github.com/tweepy/tweepy
 import json
 import urllib
 import os
 
-# Twitter API credentials
-
 def twitter_OAuth_login():
-    # need consumer_key, consumer_secret, access_key, access_secret from files
     secret_dict = {'consumer_key': '',
                    'consumer_secret': '',
                    'access_key': '',
@@ -42,7 +37,69 @@ def twitter_OAuth_login():
 
     return api
 
-def extract_images_url(file_name='tweet.json'):
+def download_tweets(auth_api, screen_name, tweets_count=200, save_path=None):
+    if not isinstance(screen_name, str):
+        raise ValueError("invalid screen name, you should pass a str")
+    if auth_api is None:
+        raise ValueError("invalid auth_api. please use twitter_OAuth_login() first to get auth_api")
+
+    alltweets = []
+    alltweets_json = []
+
+    if tweets_count <= 200:
+        try:
+            new_tweets = auth_api.user_timeline(screen_name=screen_name, count=tweets_count, tweet_mode='extended')
+            print(len(new_tweets))
+            alltweets.extend(new_tweets)
+        except tweepy.TweepError as e:
+            print("Error when requesting tweets: %s" % e)
+            return
+    else:
+        try:
+            new_tweets = auth_api.user_timeline(screen_name=screen_name, count=200, tweet_mode='extended')
+            alltweets.extend(new_tweets)
+        except tweepy.TweepError as e:
+            print("Error when requesting tweets: %s" % e)
+            return
+
+        while len(new_tweets) > 0:
+            oldest = alltweets[-1].id - 1
+            try:
+                new_tweets = auth_api.user_timeline(screen_name=screen_name, count=200,
+                                                    max_id=oldest, tweet_mode='extended')
+            except tweepy.TweepError as e:
+                print("Error when requesting tweets, %d tweets dowloaded(total:%d)" % (len(alltweets), tweets_count))
+                print("Error msg: %s" % e)
+                break
+
+            alltweets.extend(new_tweets)
+            if (len(alltweets) >= tweets_count):
+                break
+            print("...%s tweets downloaded so far" % (len(alltweets)))
+
+    if save_path is None:
+        try:
+            file = open(screen_name+'_tweets.json', 'w')
+        except:
+            raise Exception("fail to open" + screen_name + '_tweets.json')
+    else:
+        try:
+            file = open(save_path, 'w')
+        except:
+            raise Exception("fail to open" + save_path)
+
+    print("Writing tweet objects to JSON please wait...")
+    for status in alltweets:
+        alltweets_json.append(status._json)
+
+    try:
+        json.dump(alltweets_json, file, sort_keys=True, indent=4)
+        print("Writing Finish...")
+    except:
+        print("json dump to file failed!")
+    file.close()
+
+def extract_images_url(file_name):
     image_urls = []
     with open(file_name) as file:
         data = json.loads(file.read())
@@ -59,57 +116,41 @@ def extract_images_url(file_name='tweet.json'):
 def download_images(user, urls=[]):
     save_path = './download_images/'
     count = 0
+    # create saving path
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     save_path += user
     if not os.path.exists(save_path):
         os.mkdir(save_path)
+    # start downloading...
     for url in urls:
         save_name = 'image-%05d.jpg' % count
-        with open(save_path+'/'+save_name, 'wb') as file:
-            file.write(urllib.request.urlopen(url).read())
-        count += 1
+        # try 3 times to download images
+        for i in range(0, 3):
+            try:
+                file = open(save_path+'/'+save_name, 'wb')
+                file.write(urllib.request.urlopen(url).read())
+                count += 1
+                file.close()
+                break
+            except IOError as e:
+                print("Error when downloading image(%s)" % url)
+                print("error msg: %s" % e)
+        if (count % 200 == 0):
+            print("...%d images downloaded so far" % count)
 
-def get_all_tweets(screen_name):
-    # Twitter only allows access to a users most recent 3240 tweets with this method
+    if count > 0:
+        print("download %d images from %d urls" %(count, len(urls)))
+    else:
+        print("download 0 image from %d urls" % len(urls))
+
+def get_images_from_feed(screen_name):
+    print("authorize Twitter...")
     api = twitter_OAuth_login()
-    if api is None:
-        print("fail to authorize twitter. please check twitter_dev.ini and network condition")
-        return
-
-    alltweets = []
-    alltweets_json = []
-
-    new_tweets = api.user_timeline(screen_name=screen_name,count=10,tweet_mode='extended')
-    alltweets.extend(new_tweets)
-
-    oldest = alltweets[-1].id - 1
-
-    while len(new_tweets) > 0:
-
-        new_tweets = api.user_timeline(screen_name=screen_name, count=50, max_id=oldest, tweet_mode='extended')
-
-        alltweets.extend(new_tweets)
-
-        oldest = alltweets[-1].id - 1
-        if (len(alltweets) > 500):
-            break
-        print("...%s tweets downloaded so far" % (len(alltweets)))
-
-    file = open('tweet.json', 'w')
-    print("Writing tweet objects to JSON please wait...")
-    for status in alltweets:
-        alltweets_json.append(status._json)
-
-    json.dump(alltweets_json, file, sort_keys=True, indent=4)
-
-    file.close()
-
-def get_all_images(screen_name):
     print("start grabbing tweets...")
-    get_all_tweets(screen_name)
-    print("..................finish")
+    # Twitter can only return maximum 3000+ tweets
+    download_tweets(api, screen_name, 3500)
     print("start downloading images...")
-    urls = extract_images_url()
+    urls = extract_images_url(file_name=screen_name+'_tweets.json')
     download_images(screen_name, urls)
     print("..................finish")
