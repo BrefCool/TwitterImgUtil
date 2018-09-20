@@ -6,14 +6,14 @@ import json
 import urllib
 import os
 
-def twitter_OAuth_login():
+def twitter_OAuth_login(config_file):
     secret_dict = {'consumer_key': '',
                    'consumer_secret': '',
                    'access_key': '',
                    'access_secret': ''}
     # try open config file
     try:
-        file = open('twitter_dev.ini', 'r')
+        file = open(config_file, 'r')
     except:
         print("open config file fail!")
         return None
@@ -114,12 +114,12 @@ def extract_images_url(file_name):
     return image_urls
 
 def download_images(user, urls=[]):
-    save_path = './download_images/'
+    save_path = './download_images'
     count = 0
     # create saving path
     if not os.path.exists(save_path):
         os.mkdir(save_path)
-    save_path += user
+    save_path = os.path.join(save_path, user)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     # start downloading...
@@ -139,14 +139,11 @@ def download_images(user, urls=[]):
         if (count % 200 == 0):
             print("...%d images downloaded so far" % count)
 
-    if count > 0:
-        print("download %d images from %d urls" %(count, len(urls)))
-    else:
-        print("download 0 image from %d urls" % len(urls))
+    print("download %d images from %d urls" % (count, len(urls)))
 
-def get_images_from_feed(screen_name):
+def get_images_from_feed(screen_name, auth_file):
     print("authorize Twitter...")
-    api = twitter_OAuth_login()
+    api = twitter_OAuth_login(auth_file)
     print("start grabbing tweets...")
     # Twitter can only return maximum 3000+ tweets
     download_tweets(api, screen_name, 3500)
