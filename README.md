@@ -40,7 +40,7 @@ The Google Vision Module provides functions to explain objects on the image. Als
 You should have a Google cloud service account and the related credential json file.
 ```
 from TwitterImgUtil import GVision
-image_client = get_image_client('TwitterImgUtil_credential.json')
+image_client = GVision.get_image_client('TwitterImgUtil_credential.json')
 GVision.draw_labels_on_images(image_client, './download_images/@muse')
 ```
 the draw_labels_on_images function will save all the images with labels to the ./download_imags/@muse/add_labels
