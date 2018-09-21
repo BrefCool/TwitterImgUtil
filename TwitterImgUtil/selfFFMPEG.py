@@ -2,20 +2,6 @@ import subprocess
 import os
 import time
 
-def add_label_to_images(images_dir, image_name, label_str):
-    if not os.path.exists(os.path.join(images_dir, 'add_labels')):
-        os.mkdir(os.path.join(images_dir, 'add_labels'))
-    para_str = '"drawtext=text=' + label_str + ':fontsize=48:fontcolor=white:box=1:'\
-          'boxcolor=black@0.7:x=70:y=400"'
-    cmd = ['ffmpeg', '-i', os.path.join(images_dir, image_name), '-vf', para_str,
-           os.path.join(images_dir, 'add_labels', image_name)]
-    try:
-        subprocess.check_call(cmd)
-    except OSError:
-        print("cmd ffmpeg not found. please install ffmpeg in your computer first")
-    except subprocess.CalledProcessError as e:
-        print("error when execute command, error msg: %s" % e)
-
 def resize_images(images_dir):
     if not os.path.exists(os.path.join(images_dir, 'for_video')):
         os.mkdir(os.path.join(images_dir, 'for_video'))
@@ -23,10 +9,14 @@ def resize_images(images_dir):
            os.path.join(images_dir, 'for_video', 'image-%05d.jpg')]
     try:
         subprocess.check_call(cmd)
+        return True
     except OSError:
         print("cmd ffmpeg not found. please install ffmpeg in your computer first")
+        return False
     except subprocess.CalledProcessError as e:
         print("error when execute command, error msg: %s" % e)
+        return False
+
 
 
 def convert_images_to_video(images_dir, videos_dir):
@@ -37,7 +27,8 @@ def convert_images_to_video(images_dir, videos_dir):
         os.mkdir(videos_dir)
 
     print("resizing images...")
-    resize_images(images_dir)
+    if resize_images(images_dir) is False:
+        return
     time.sleep(5)
     image_path = images_dir + '/for_video'
     image_counts = len([f for f in os.listdir(image_path)

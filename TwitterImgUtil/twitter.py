@@ -95,8 +95,9 @@ def download_tweets(auth_api, screen_name, tweets_count=200, save_path=None):
     try:
         json.dump(alltweets_json, file, sort_keys=True, indent=4)
         print("Writing Finish...")
-    except:
+    except Exception as e:
         print("json dump to file failed!")
+        print("error msg: %s" % e)
     file.close()
 
 def extract_images_url(file_name):
@@ -128,7 +129,7 @@ def download_images(user, urls=[]):
         # try 3 times to download images
         for i in range(0, 3):
             try:
-                file = open(save_path+'/'+save_name, 'wb')
+                file = open(os.path.join(save_path, save_name), 'wb')
                 file.write(urllib.request.urlopen(url).read())
                 count += 1
                 file.close()
