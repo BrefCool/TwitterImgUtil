@@ -41,6 +41,6 @@ You should have a Google cloud service account and the related credential json f
 ```
 from TwitterImgUtil import GVision
 image_client = GVision.get_image_client('TwitterImgUtil_credential.json')
-GVision.draw_labels_on_images(image_client, './download_images/@muse')
+GVision.draw_labels_on_images(image_client, './download_images/@muse', './download_images/@muse/add_labels')
 ```
 the draw_labels_on_images function will save all the images with labels to the ./download_imags/@muse/add_labels
