@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='TwitterImgUtil',
-      version='0.3',
+      version='0.4',
       description='include twitter images grabbing, adding labels function',
       url='https://github.com/BrefCool/TwitterImgUtil',
       author='bref',
