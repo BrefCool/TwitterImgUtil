@@ -5,6 +5,7 @@ I have published it to the [pypi.org](https://pypi.org/project/TwitterImgUtil/#d
 ```
 pip install TwitterImgUtil
 ```
+Or, you can just use git clone and run pip install . on the local path.
 In order to get used of the selfFFMPEG module of the package, you should make sure that your computer have installed FFMPEG and add the ffmpeg.exe to your environment path.
 You can download the FFMPEG from this website: https://www.ffmpeg.org/
 ## The Twitter Module
@@ -24,8 +25,8 @@ All the images will be saved to './download_images/@muse' file dir.
 Also, the Twitter Module also provides function to download tweets:
 ```
 from TwitterImgUtil import twitter
-api = twitter_OAuth_login('twitter_dev.ini')
-download_tweets(api, '@muse', 200)
+api = twitter.twitter_OAuth_login('twitter_dev.ini')
+twitter.download_tweets(api, '@muse', 200)
 ```
 It will download 200 tweets from user @muse
 ## The FFMPEG Module
