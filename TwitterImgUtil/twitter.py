@@ -7,6 +7,10 @@ import urllib
 import os
 
 def twitter_OAuth_login(config_file):
+    """ authorized Twitter
+    :param config_file: the file that contains twitter developer account's key & secret
+    :return: the authorized object
+    """
     secret_dict = {'consumer_key': '',
                    'consumer_secret': '',
                    'access_key': '',
@@ -38,6 +42,13 @@ def twitter_OAuth_login(config_file):
     return api
 
 def download_tweets(auth_api, screen_name, tweets_count=200, save_path=None):
+    """ download tweets_count tweets from one specific user
+    :param auth_api: authorized api
+    :param screen_name: user's id
+    :param tweets_count: the number of tweets
+    :param save_path: there the tweets info should be saved
+    :return: None
+    """
     if not isinstance(screen_name, str):
         raise ValueError("invalid screen name, you should pass a str")
     if auth_api is None:
@@ -101,6 +112,10 @@ def download_tweets(auth_api, screen_name, tweets_count=200, save_path=None):
     file.close()
 
 def extract_images_url(file_name):
+    """ extract the images url from tweets info
+    :param file_name: the tweets file path
+    :return: a list contains all images' urls.
+    """
     image_urls = []
     with open(file_name) as file:
         data = json.loads(file.read())
@@ -115,6 +130,11 @@ def extract_images_url(file_name):
     return image_urls
 
 def download_images(user, urls=[]):
+    """ download images from urls
+    :param user: user's id
+    :param urls: a list contains all urls
+    :return: None
+    """
     save_path = './download_images'
     count = 0
     # create saving path
@@ -143,6 +163,11 @@ def download_images(user, urls=[]):
     print("download %d images from %d urls" % (count, len(urls)))
 
 def get_images_from_feed(screen_name, auth_file):
+    """ download all images form one user
+    :param screen_name: user's id
+    :param auth_file: authorized file, contains key and secret
+    :return: None
+    """
     print("authorize Twitter...")
     api = twitter_OAuth_login(auth_file)
     print("start grabbing tweets...")

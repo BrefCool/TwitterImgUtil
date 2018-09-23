@@ -3,6 +3,10 @@ import os
 import time
 
 def resize_images(images_dir):
+    """ resize all image in images_dir to 640X480
+    :param images_dir: where all images are saved
+    :return: Successful or not
+    """
     if not os.path.exists(os.path.join(images_dir, 'for_video')):
         os.mkdir(os.path.join(images_dir, 'for_video'))
     cmd = ['ffmpeg', '-i', os.path.join(images_dir, 'image-%05d.jpg'), '-vf', 'scale=640:480',
@@ -20,6 +24,11 @@ def resize_images(images_dir):
 
 
 def convert_images_to_video(images_dir, videos_dir):
+    """ convert all images in images_dir to videos and save it to videos_dir:
+    :param images_dir: where all images are saved.
+    :param videos_dir: where all generated videos should be saved
+    :return: None
+    """
     if not os.path.exists(images_dir):
         print("images_dir: %s not exists" % images_dir)
         return
