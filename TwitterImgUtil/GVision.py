@@ -9,12 +9,25 @@ from google.cloud import vision
 from google.cloud.vision import types
 
 def get_image_client(credential_file):
+    """ return image client with credential file
+    :param credential_file: location of Google Cloud service account's credential file
+    :return: the image client
+    """
     return vision.ImageAnnotatorClient.from_service_account_file(credential_file)
 
 def get_video_client(credential_file):
+    """ return video client with credential file
+    :param credential_file: the location of Google Cloud service account's credential file
+    :return the video client
+    """
     return videointelligence.VideoIntelligenceServiceClient.from_service_account_file(credential_file)
 
 def get_labels_from_image(image_client, image_path):
+    """ get the labels from each image in the image_path
+    :param image_client: the authorized client
+    :param image_path: where the images is saved
+    :return: a list contains the top 3 relative labels of this image
+    """
     with io.open(image_path, 'rb') as image_file:
         content = image_file.read()
     try:
@@ -28,6 +41,12 @@ def get_labels_from_image(image_client, image_path):
         return []
 
 def draw_text_on_images(file_path, text, save_path):
+    """ draw text on one specific image
+    :param file_path: where this image is saved
+    :param text: the text to be drawn
+    :param save_path: where the output image should be saved
+    :return: Successful or not
+    """
     try:
         image = Image.open(file_path)
         draw = ImageDraw.Draw(image)
@@ -49,6 +68,12 @@ def draw_text_on_images(file_path, text, save_path):
         return False
 
 def draw_labels_on_images(image_client, image_dir, save_dir):
+    """ draw labels on each image
+    :param image_client: the authorized image client
+    :param image_dir: where all images are saved
+    :param save_dir: where all output images should be saved
+    :return: None
+    """
     if image_dir == save_dir:
         print("input image dir cannot equal to output save dir")
         return
@@ -65,6 +90,12 @@ def draw_labels_on_images(image_client, image_dir, save_dir):
                 count += 1
 
 def get_labels_from_video(video_client, video_path, overtime=90):
+    """ print label info from one video
+    :param video_client: the authorized video
+    :param video_path: where the video is saved
+    :param overtime: the maximum process time
+    :return: None
+    """
     features = [videointelligence.enums.Feature.LABEL_DETECTION]
     with io.open(video_path, 'rb') as movie:
         input_content = movie.read()
