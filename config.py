@@ -81,6 +81,7 @@ def config_db(job):
 
     # config database
     if need_config_db:
+        cfg.set('DATABASE', 'db_type', job['db_type'])
         if job['db_type'] == 'mysql':
             return config_mysql(cfg)
         else:
@@ -125,7 +126,10 @@ def sign_up(job):
                                   'twitter_auth': twitter_auth_path,
                                   'google_auth': google_auth_path})
     else:
-        return add_user_to_mongodb()
+        return add_user_to_mongodb({'username': username,
+                                    'password': password,
+                                    'twitter_auth': twitter_auth_path,
+                                    'google_auth': google_auth_path})
 
 
 OPERATIONS = {'config_database': config_db,

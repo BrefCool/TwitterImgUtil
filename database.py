@@ -1,10 +1,10 @@
 import pymysql
-import pymongo
 import os
 import configparser
 import uuid
 from settings import Settings
 from shutil import copyfile
+from pymongo import MongoClient
 
 RES_DIR = Settings().RES_DIR
 CONFIGURE = Settings().CONFIGURE
@@ -55,18 +55,19 @@ def config_mysql(cfg):
 
 
 def config_mongodb(cfg):
+    print("start config mongodb")
     # get host
-    msg = "Enter the mysql host ip(default: %s): " % str(cfg['DATABASE']['host'])
+    msg = "Enter the mongodb host ip(default: %s): " % str(cfg['DATABASE']['host'])
     host = input(msg) or str(cfg['DATABASE']['host'])
     cfg.set('DATABASE', 'host', host)
 
     # get port
-    msg = "Enter the mysql port(default: %s): " % str(cfg['DATABASE']['port'])
+    msg = "Enter the mongodb port(default: %s): " % str(cfg['DATABASE']['port'])
     port = input(msg) or str(cfg['DATABASE']['port'])
     cfg.set('DATABASE', 'port', port)
 
     # get db name
-    msg = "Enter the mysql db's name(default: %s): " % str(cfg['DATABASE']['db_name'])
+    msg = "Enter the mongodb db's name(default: %s): " % str(cfg['DATABASE']['db_name'])
     db_name = input(msg) or str(cfg['DATABASE']['db_name'])
     cfg.set('DATABASE', 'db_name', db_name)
 
@@ -82,6 +83,8 @@ def config_mongodb(cfg):
 
     with open(os.path.join(RES_DIR, CONFIGURE), 'w') as configure_file:
         cfg.write(configure_file)
+
+    return True, "config mongodb success"
 
 
 def add_user_to_mysql(data):
@@ -136,8 +139,38 @@ def add_user_to_mysql(data):
     return True, "add user Success"
 
 
-def add_user_to_mongodb():
-    pass
+def add_user_to_mongodb(data):
+    cfg = configparser.RawConfigParser()
+    cfg.read(os.path.join(RES_DIR, CONFIGURE))
+
+    host = cfg['DATABASE']['host']
+    port = cfg['DATABASE']['port']
+    db_name = cfg['DATABASE']['db_name']
+
+    username = data['username']
+    password = data['password']
+    twitter_auth = data['twitter_auth']
+    google_auth = data['google_auth']
+
+    user = {'username': username,
+            'password': password,
+            'twitter_auth': twitter_auth,
+            'google_auth': google_auth}
+
+    client = MongoClient(host, int(port))
+    db = client[db_name]
+
+    try:
+        userid = db.users.insert_one(user).inserted_id
+        if not os.path.exists(os.path.join(RES_DIR, str(userid))):
+            os.mkdir(os.path.join(RES_DIR, str(userid)))
+            copyfile(twitter_auth, os.path.join(RES_DIR, str(userid), twitter_auth))
+            copyfile(google_auth, os.path.join(RES_DIR, str(userid), google_auth))
+    except Exception as e:
+        print("add user failed. Please check if your configure info is correct: %s" % e)
+        return False, "add user failed"
+
+    return True, "add user Success"
 
 
 def log_in(username, password):
@@ -150,7 +183,21 @@ def log_in(username, password):
 
 
 def login_mongodb(username, password):
-    pass
+    cfg = configparser.RawConfigParser()
+    cfg.read(os.path.join(RES_DIR, CONFIGURE))
+
+    host = cfg['DATABASE']['host']
+    port = cfg['DATABASE']['port']
+    db_name = cfg['DATABASE']['db_name']
+
+    client = MongoClient(host, int(port))
+    db = client[db_name]
+    result = db.users.find_one({'username': username, 'password': password})
+
+    if result is None:
+        return False, "username or password wrong"
+
+    return True, result['_id']
 
 
 def login_mysql(username, password):
@@ -233,8 +280,24 @@ def get_username_mysql(userid):
     connect.close()
     return True, result
 
+
 def get_username_mongodb(userid):
-    pass
+    cfg = configparser.RawConfigParser()
+    cfg.read(os.path.join(RES_DIR, CONFIGURE))
+
+    host = cfg['DATABASE']['host']
+    port = cfg['DATABASE']['port']
+    db_name = cfg['DATABASE']['db_name']
+
+    client = MongoClient(host, int(port))
+    db = client[db_name]
+    result = db.users.find_one({'_id': userid})
+
+    if result is None:
+        return False, "get username failed"
+
+    return True, (result['_id'], result['username'], result['password'], result['twitter_auth'], result['google_auth'])
+
 
 def create_task(userid, target):
     cfg = configparser.RawConfigParser()
@@ -243,6 +306,7 @@ def create_task(userid, target):
         return create_task_mysql(userid, target)
     else:
         return create_task_mongodb(userid, target)
+
 
 def create_task_mysql(userid, target):
     cfg = configparser.RawConfigParser()
@@ -281,8 +345,32 @@ def create_task_mysql(userid, target):
     connect.close()
     return True, taskid
 
+
 def create_task_mongodb(userid, target):
-    pass
+    cfg = configparser.RawConfigParser()
+    cfg.read(os.path.join(RES_DIR, CONFIGURE))
+
+    host = cfg['DATABASE']['host']
+    port = cfg['DATABASE']['port']
+    db_name = cfg['DATABASE']['db_name']
+
+    client = MongoClient(host, int(port))
+    db = client[db_name]
+
+    task = {'image_count': 0,
+            'owener': userid,
+            'image_location': '',
+            'state': 'initialize',
+            'video_location': '',
+            'twitter_id': target}
+
+    try:
+        taskid = db.tasks.insert_one(task).inserted_id
+    except Exception as e:
+        print("create task failed. %s" % e)
+        return False, "create task failed"
+
+    return True, taskid
 
 
 def update_task(data):
@@ -336,7 +424,32 @@ def update_task_mysql(data):
     return True, taskid
 
 
-
-
 def update_task_mongodb(data):
-    pass
+    cfg = configparser.RawConfigParser()
+    cfg.read(os.path.join(RES_DIR, CONFIGURE))
+
+    host = cfg['DATABASE']['host']
+    port = cfg['DATABASE']['port']
+    db_name = cfg['DATABASE']['db_name']
+
+    taskid = data['id']
+    image_location = data['image']
+    video_location = data['video']
+    image_count = data['image_count']
+
+    client = MongoClient(host, int(port))
+    db = client[db_name]
+
+    result = db.tasks.find_one({'_id': taskid})
+    if result is None:
+        print('invalid task ')
+        return False, "update task failed"
+    try:
+        db.tasks.update_one({'_id': result['_id']}, {'$set': {'image_location': image_location,
+                                                              'video_location': video_location,
+                                                              'image_count': image_count}})
+    except Exception as e:
+        print("update task failed. %s" % e)
+        return False, "update task failed"
+
+    return True, taskid
