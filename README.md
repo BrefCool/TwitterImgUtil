@@ -1,3 +1,36 @@
+# TwitterImgCrawler (mini-project03: database)
+This is a python program which can be used to crawl images from twitter account and convert those images to videos with recognized labels.
+To use this program, you should install MySQL or mongoDB on your computer.  
+Also, the package pymysql and pymongo is required.  
+```
+pip install pymysql
+pip install pymongo
+```
+To use this program, you should config the database info and create a user first.
+1. Use config.py to config database
+```
+python config.py --db mysql
+```
+or
+```
+python config.py --db mongodb
+```
+follow the instruction to config mysql or mongodb  
+2. Use config.py to sign up a new user
+```
+python config.py --user bref --twitter_auth twitter_dev.ini --google_auth TwitterImgUtil_credential.json
+```
+you should prepare the twitter and google credential files.  
+the parameter behind --user is the username.
+the parameter behind --twitter_auth is the twitter account's credential file  
+the parameter behind --google_auth is the google credential file  
+It will ask you to create a new password for your new user.  
+After Configuration, you can run crawler:  
+```
+python crawler.py
+```
+use the username and password you created before to login.
+
 # TwitterImgUtil
 It's a package that combined Twitter API, FFMPEG and Google Vision API. It provides some function like downloading images\tweets from twitter users, converting those images to several videos and recognising objects on the images.
 ## How do I install it?
