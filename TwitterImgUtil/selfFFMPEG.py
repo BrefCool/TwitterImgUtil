@@ -41,7 +41,7 @@ def convert_images_to_video(images_dir, videos_dir):
     time.sleep(5)
     image_path = images_dir + '/for_video'
     image_counts = len([f for f in os.listdir(image_path)
-                  if os.path.isfile(os.path.join(image_path, f)) and f.endswith('.jpg')])
+                        if os.path.isfile(os.path.join(image_path, f)) and f.endswith('.jpg')])
     print("...finish, %d images are resized" % image_counts)
 
     image_iter = int(image_counts / 100)
