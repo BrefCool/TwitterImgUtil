@@ -19,14 +19,14 @@ class FrontEnd:
             try:
                 self.mainScreen = self.interfaces.show_main(self.texts.get_main_screen_text_with_banner(),
                                                             self.texts.get_version())
-                self.loop = urwid.MainLoop(self.mainScreen, self.palette)
-                                           # unhandled_input=TImgCallbacks.TImgCallbacks().main_screen_callback)
+                self.loop = urwid.MainLoop(self.mainScreen, self.palette,
+                                           unhandled_input=TImgCallbacks.TImgCallbacks().main_screen_callback)
                 self.loop.run()
             except UnicodeEncodeError:
                 self.mainScreen = self.interfaces.show_main(self.texts.get_main_screen_text_without_banner(),
                                                             self.texts.get_version())
-                self.loop = urwid.MainLoop(self.mainScreen, self.palette)
-                                           # unhandled_input=TImgCallbacks.TImgCallbacks().main_screen_callback)
+                self.loop = urwid.MainLoop(self.mainScreen, self.palette,
+                                           unhandled_input=TImgCallbacks.TImgCallbacks().main_screen_callback)
                 self.loop.run()
 
 

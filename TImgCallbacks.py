@@ -41,6 +41,8 @@ class TImgCallbacks(object, metaclass=Singleton):
         if key == 'esc':
             sys.exit("You have quit TImgClient %s" % self.texts.get_version())
         elif key in ('S', 's'):
-            pass
+            self.mainScreen = self.interfaces.show_sign_up()
+            self.loop = urwid.MainLoop(self.mainScreen, self.palette, unhandled_input=self.main_screen_callback)
+            self.loop.run()
         elif key in ('L', 'l'):
             pass

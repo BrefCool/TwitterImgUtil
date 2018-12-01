@@ -47,3 +47,39 @@ class TImgScreen:
         bkg = urwid.AttrMap(head_body_foot_frame, 'Bg')
 
         return bkg
+
+    def show_log_in(self, version):
+        pass
+
+    def show_sign_up(self):
+        """This is a sign up screen"""
+        footer = urwid.AttrMap(urwid.Text(self.texts.get_footer_signup_text(), align='center'), 'InfoFooter')
+
+        header = urwid.AttrMap(urwid.Text(('InfoHeaderText', 'Sign Up'), align='center'), 'InfoHeader')
+
+        self.editField = urwid.Edit(('Field', ''),
+                                    multiline=True,
+                                    edit_text=self.texts.get_signup_record_template(),
+                                    edit_pos=len(self.texts.get_signup_record_template().split('\n')[0]),
+                                    allow_tab=True)
+        # username = urwid.Text(('Field', 'UserName:'))
+        # twitter_auth = urwid.Text(('Field', 'Twitter Auth'))
+        # google_auth = urwid.Text(('Field', 'Google Auth'))
+        editField = urwid.ListBox(urwid.SimpleListWalker([
+            urwid.Divider(top=1),
+            urwid.AttrWrap(self.editField,
+                           'Info', 'OnFocusBg')
+        ]))
+        explanation = self.texts.get_tips()
+        explanation = urwid.ListBox(explanation)
+
+        vline = urwid.AttrWrap(urwid.SolidFill('|'), 'Info')
+
+        bodyWithInfo = urwid.Columns([('fixed', 40, explanation), ('fixed', 1, vline), editField], dividechars=3,
+                                     focus_column=2)
+        headBodyFootFrame = urwid.Frame(footer=footer, header=header, body=bodyWithInfo)
+
+        # Background
+        bkg = urwid.AttrWrap(headBodyFootFrame, 'Bg')
+
+        return bkg
