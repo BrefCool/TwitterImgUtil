@@ -21,15 +21,21 @@ follow the instruction to config mysql or mongodb
 python config.py --user bref --twitter_auth twitter_dev.ini --google_auth TwitterImgUtil_credential.json
 ```
 you should prepare the twitter and google credential files.  
-the parameter behind --user is the username.
+the parameter behind --user is the username.  
 the parameter behind --twitter_auth is the twitter account's credential file  
 the parameter behind --google_auth is the google credential file  
 It will ask you to create a new password for your new user.  
+
+
 After Configuration, you can run crawler:  
 ```
 python crawler.py
 ```
 use the username and password you created before to login.
+![Alt text](images_for_readme/crawler.PNG?raw=true "Title")  
+you can press c to create a crawling task:  
+![Alt text](images_for_readme/task.PNG?raw=true "Title")
+It will download iamges and convert them to videos.   
 
 # TwitterImgUtil
 It's a package that combined Twitter API, FFMPEG and Google Vision API. It provides some function like downloading images\tweets from twitter users, converting those images to several videos and recognising objects on the images.
